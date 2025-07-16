@@ -1,0 +1,135 @@
+# 00-namespace.yaml (opcional, mas ajuda a organizar)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blog
+---
+# 01-secret.yaml – guarda a senha do banco
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-pass
+  namespace: blog
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: myrootpass
+  MYSQL_PASSWORD: myblogpass
+  MYSQL_USER: bloguser
+  MYSQL_DATABASE: blogdb
+---
+# 02-pvc-mariadb.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+  namespace: blog
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+# 03-pvc-wordpress.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wp-pvc
+  namespace: blog
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+# 04-deploy-mariadb.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: blog
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mariadb }
+  template:
+    metadata:
+      labels: { app: mariadb }
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:11
+          envFrom:
+            - secretRef:
+                name: mariadb-pass
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: db-pvc
+---
+# 05-svc-mariadb.yaml (ClusterIP interno)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-svc
+  namespace: blog
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mariadb
+---
+# 06-deploy-wordpress.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: blog
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: wordpress }
+  template:
+    metadata:
+      labels: { app: wordpress }
+    spec:
+      containers:
+        - name: wordpress
+          image: wordpress:6.5-apache
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mariadb-svc.blog.svc.cluster.local:3306
+            - name: WORDPRESS_DB_USER
+              valueFrom: { secretKeyRef: { name: mariadb-pass, key: MYSQL_USER } }
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: mariadb-pass, key: MYSQL_PASSWORD } }
+            - name: WORDPRESS_DB_NAME
+              valueFrom: { secretKeyRef: { name: mariadb-pass, key: MYSQL_DATABASE } }
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: wp-storage
+              mountPath: /var/www/html
+      volumes:
+        - name: wp-storage
+          persistentVolumeClaim:
+            claimName: wp-pvc
+---
+# 07-svc-wordpress.yaml (NodePort para acesso externo)
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-svc
+  namespace: blog
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080        # opcional; caso omita, o Kubernetes gera
+  selector:
+    app: wordpress
