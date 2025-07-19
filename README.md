@@ -226,4 +226,9 @@ Esse tipo de integração é muito útil em aplicações reais, principalmente q
 
 - **Felipe Parreiras e José Marconi**
 - Curso: Engenharia de Computação - CEFET-MG
-- Projeto de Kubernet's com WordPress + MariaDB
+
+## 📚 Referências
+
+- [Documentação oficial do Kubernetes](https://kubernetes.io/docs/tutorials/stateful-application/mysql-wordpress-persistent-volume/)
+- [Documentação do WordPress Docker](https://hub.docker.com/_/wordpress)
+- [Documentação do MariaDB Docker](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/automated-mariadb-deployment-and-administration/kubernetes-and-mariadb/kubernetes-operators-for-mariadb])
