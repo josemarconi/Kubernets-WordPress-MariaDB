@@ -4,6 +4,27 @@ Este projeto realiza a implantação de um ambiente WordPress com banco de dados
 
 ---
 
+## ➡️ Instalação 
+
+Os comando para instalação do kubernets utilizado, foi: 
+```bash
+sudo apt install curl apt-transport-https
+
+curl -LO "https://dl.k8s.io/release/$(curl -L -s
+https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linuxamd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+minikube start --driver=docker
+
+kubectl get nodes
+```
+
+---
+
 ## 📂 Estrutura dos Arquivos
 
 O projeto está dividido em múltiplos arquivos YAML, organizados por funcionalidade:
@@ -173,7 +194,7 @@ Essa arquitetura serve para:
 
 ---
 
-## 🧪 Testes Realizados (Completar)
+## 🧪 Testes Realizados
 
 ### Acessar o Word_Press:
 
@@ -198,7 +219,6 @@ Processo do Kubernet's de aplicar atualizações de forma segura.
 ```bash
 kubectl rollout status deployment/<nome>
 ```
-
 > Esse comando junta vários recursos e mostra o estado atual de todos eles:
 > ```bash
 > kubectl get all -n blog
@@ -206,19 +226,265 @@ kubectl rollout status deployment/<nome>
 
 <img width="605" height="247" alt="image" src="https://github.com/user-attachments/assets/02c2764c-b6d0-4099-9a8e-737020a2c666" />
 
+### Logs:
+> Se um container crashou e foi reiniciado, você pode ver os logs da execução anterior com:
+```bash
+kubectl logs -p <nome-do-pod>
+```
+>Logs WordPress:
+```bash	
+kubectl -n blog logs deployment/wordpress
+```
+![alt text](Imagens/image.png)
+>Logs MariaDB:
+```bash	
+kubectl -n blog logs deployment/mariadb
+```
+![alt text](Imagens/image-1.png)
+
+### Dashboard:
+ 📋 O que dá para fazer com o dashboard?
+  Você pode:
+
+- Ver o estado dos pods, deployments, services etc.
+
+- Criar ou deletar objetos Kubernetes diretamente pela interface.
+
+- Inspecionar logs de pods.
+
+- Monitorar recursos (CPU/memória, se tiver metrics-server instalado).
+
+- Aplicar arquivos YAML diretamente (via "Upload YAML").
+
+- Ver eventos e mensagens de erro.
+
+- Acessar shells de containers via terminal embutido.
+
+✅ Pré-requisitos:
+- Você precisa ter o minikube instalado e o cluster iniciado (minikube start).
+
+- Também precisa do kubectl instalado para que o dashboard funcione corretamente.
+
+> O comando é:
+```bash	
+minikube dashboard
+```
+> Depois de utilizado, ele retorna uma url em que é possível visualizar o dashboard:
+![alt text](Imagens/image-3.png)
+
+> Acessando a url, temas a seguinte tela de visualização:
+![alt text](Imagens/image-2.png)
 
 ---
 
-## ✅ Conclusão (Completar)
+## ⚠️ Problemas encontrados:
 
-Fazer o deploy do WordPress com o banco MariaDB usando Kubernet´s mostra, na prática, como dois serviços podem funcionar juntos de forma organizada e eficiente. Com os volumes persistentes (PVCs), garantimos que os dados do site e do banco não sejam perdidos, mesmo se os pods forem reiniciados ou movidos.
+No âmbito geral, foi bem tranquilo as instalações do kubernet, mas o fato dele ter como requisito o docker, atrapalhou um dos nossos integrantes do grupo, que não conseguiu pelos seguintes casos: 
 
-Esse tipo de integração é muito útil em aplicações reais, principalmente quando precisamos de estabilidade, escalabilidade e facilidade para manter ou atualizar os serviços. Usar Kubernet´s dessa forma ajuda a deixar o ambiente mais controlado, flexível e preparado para crescer, sem complicação.
+> **1**
+> Em caso de não funcionamento, faça a instalação do Docker via browser, baixando, através do instalador, o aplicativo.
+> 
+> 1- Instale o Docker Desktop:
+>   - Baixe: https://www.docker.com/products/docker-desktop
+>   - Siga o assistente de instalação.
+>   - Durante a instalação, marque a opção “Enable integration with WSL 2”.
+>     
+> 2- Configure o WSL para usar o Docker Desktop:
+>   - No Docker Desktop, vá em Settings > Resources > WSL Integration.
+>   - Ative a integração com sua distro (ex: Ubuntu).
+> 3- No terminal WSL, execute os comandos de teste de instalação
+
+> **2**
+> Caso a porta 8080 já esteja em uso, utilize outra porta para ter acesso via navegador, como a 8888. 
+
+> **3**
+> Com relação ao Kubernets mesmo, a formulção do script foi um pouco mais complicado, entretanto, seguindo pelos modelos das referências, > foi possível concluí-lo de forma que aplicação funcionasse corretamente. 
+
+## ✅ Conclusão
+
+A implantação do WordPress com MariaDB em um ambiente Kubernetes demonstrou de forma prática a robustez e a flexibilidade proporcionadas por ferramentas modernas de orquestração de containers. Ao utilizar recursos como Namespaces, Secrets, Persistent Volume Claims e Deployments, foi possível estruturar uma aplicação web funcional com armazenamento persistente, segurança de credenciais e isolamento de componentes.
+
+Além disso, o uso do Minikube para simular um cluster local permitiu uma compreensão aprofundada dos fluxos de criação, monitoramento e manutenção de serviços no Kubernetes, tornando o aprendizado mais aplicável a contextos reais de produção. A organização modular dos arquivos YAML também facilitou a manutenção e reusabilidade do projeto.
+
+Apesar de alguns desafios técnicos iniciais, como dependências de ferramentas (ex: Docker, WSL) e ajustes finos nos scripts, a experiência evidenciou os benefícios da abordagem orientada a containers, como escalabilidade, alta disponibilidade, automação de atualizações (rollout) e recuperação de falhas.
+
+Por fim, a interface do WordPress foi plenamente acessível e funcional, evidenciando que mesmo sistemas complexos de múltiplos serviços podem ser facilmente gerenciados com o Kubernetes, reforçando sua relevância para o desenvolvimento e a operação de aplicações modernas baseadas em microserviços.
 
 ---
 
-## 📸 Screenshots (Completar)
+## Utilizando o WordPress
 
+1- Após subir os containers, é possível acessar o a url pela porta local:
+```
+-- http://localhost:(porta_utilizado_no_script - Ex: 8080)/wp-admin/install.php
+```
+
+Quando feito isso, entramos na tela para começar a configurar o site, a primeira tela é para definir o idioma padrão: 
+![](Imagens/P1.jpg)
+
+2- Definido o idioma, a tela subsequente vem para configurações iniciais do site: 
+![](Imagens/P2.jpg)
+
+Sendo bem sucedido ele retornara na tela que foi um sucesso e um link direto para acessar e fazer login. 
+
+3- Realizado o Login, entramos no painel principal do WordPress, onde podemos realizar toda a configuração e tematização do nosso site:
+![](Imagens/P3.jpg)
+
+## Menu lateral do WordPress
+
+### 1- Painel
+> Área inicial de administração do WordPress. Apresenta uma visão geral do site.
+>
+> - **Início**: resumo de atividades recentes, rascunhos, status do sistema.
+> - **Atualizações**: verifica e instala atualizações de:
+>   - Core do WordPress
+>   - Temas
+>   - Plugins
+>   - Traduções
+
+![](Imagens/P4.jpg)
+
+---
+
+### 2- Posts
+> Seção onde você gerencia os **posts do blog**.
+>
+> 1. **Todos os posts**  
+>    Lista todos os artigos publicados ou em rascunho.
+> 2. **Adicionar novo**  
+>    Abre o editor para criar um novo post.
+> 3. **Categorias**  
+>    Cria ou edita categorias para organizar seus posts.
+> 4. **Tags**  
+>    Define palavras-chave que descrevem seus posts.
+
+![](Imagens/P5.jpg)
+
+---
+
+### 3- Mídia
+> Biblioteca de **arquivos enviados**, como imagens, vídeos, PDFs.
+>
+> 1. **Biblioteca**  
+>    Mostra todos os arquivos enviados, com opções de edição.
+> 2. **Adicionar novo**  
+>    Permite enviar novos arquivos diretamente.
+
+![](Imagens/P6.jpg)
+
+---
+
+### 4- Páginas
+> Gerencia páginas estáticas do site (ex: Sobre, Contato).
+>
+> 1. **Todas as páginas**  
+>    Lista e permite editar/excluir páginas existentes.
+> 2. **Adicionar nova**  
+>    Cria uma nova página com o editor de blocos.
+
+![](Imagens/P7.jpg)
+
+---
+
+### 5- Comentários
+> Central de **moderação de comentários** feitos por visitantes.
+>
+> - Aprovar, rejeitar, marcar como spam ou responder.
+> - Útil para manter o conteúdo limpo e organizado.
+> - Os ícones coloridos ajudam a identificar o status dos comentários.
+
+![](Imagens/P8.jpg)
+
+---
+
+### 6- Aparência
+> Personalização visual do site, temas e estrutura.
+>
+> 1. **Temas**  
+>    Instala, ativa ou remove temas.
+> 2. **Personalizar**  
+>    Acessa o personalizador visual com pré-visualização.
+> 3. **Widgets**  
+>    Gerencia blocos reutilizáveis (como sidebar e rodapé).
+> 4. **Menus**  
+>    Cria e organiza menus de navegação.
+> 5. **Editor de arquivos**  
+>    (opcional) Edita diretamente os arquivos do tema. ⚠️ **Cuidado: pode quebrar o site.**
+
+![](Imagens/P9.jpg)
+
+---
+
+### 7- Plugins
+> Adiciona funcionalidades extras ao WordPress.
+>
+> 1. **Plugins instalados**  
+>    Lista e permite ativar/desativar plugins.
+> 2. **Adicionar novo**  
+>    Busca e instala plugins a partir do repositório oficial.
+> 3. **Editor de plugins**  
+>    ⚠️ Permite alterar o código dos plugins instalados.
+
+![](Imagens/P10.jpg)
+
+---
+
+### 8- Usuários
+> Gerencia quem pode acessar o painel e com que permissões.
+>
+> 1. **Todos os usuários**  
+>    Lista e edita usuários cadastrados.
+> 2. **Adicionar novo**  
+>    Cria um novo usuário com função específica (Administrador, Editor, etc).
+> 3. **Perfil**  
+>    Configurações e dados do seu próprio perfil (foto, senha, etc).
+
+![](Imagens/P11.jpg)
+
+---
+
+### 9- Ferramentas
+> Conjunto de recursos administrativos diversos.
+>
+> 1. **Ferramentas disponíveis**  
+>    Inclui funções como "Converter categorias em tags".
+> 2. **Importar/Exportar**  
+>    Migração de conteúdo entre sites.
+> 3. **Saúde do site**  
+>    Diagnóstico de performance e segurança.
+> 4. **Exportar dados pessoais / Apagar dados**  
+>    Ferramentas de conformidade com a LGPD/GDPR.
+
+![](Imagens/P12.jpg)
+
+---
+
+### 10- Configurações
+> Ajustes fundamentais do site.
+>
+> 1. **Geral**  
+>    Nome do site, URL, idioma, fuso horário.
+> 2. **Escrita**  
+>    Opções de publicação padrão.
+> 3. **Leitura**  
+>    Define qual página é a inicial e quantos posts por página.
+> 4. **Discussão**  
+>    Controle de comentários e moderação.
+> 5. **Mídia**  
+>    Tamanhos padrão para imagens.
+> 6. **Links permanentes**  
+>    Formato das URLs dos posts e páginas.
+> 7. **Privacidade**  
+>    Política de privacidade do site.
+
+![](Imagens/P13.jpg)
+
+## 11 - Visualização do site
+> Visualizar a página que está sendo feita
+> Obs: Normalmente depois de criado o site, a url quando digitada jogará direto nessa página:
+
+
+![](Imagens/P14.jpg)
 
 ---
 
